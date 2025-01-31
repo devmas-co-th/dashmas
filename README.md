@@ -1,7 +1,5 @@
 # Dashmas
-
-&#x20;*(ใส่โลโก้ถ้ามี)*
-
+ 
 ## 🚀 Introduction
 
 **Dashmas** is a powerful, modular, and extensible Admin Dashboard Starter Kit designed to streamline the development of enterprise-level applications. With built-in module support, Dashmas enables developers to install, customize, and extend functionalities seamlessly, making it an ideal foundation for any business application.
