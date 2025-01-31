@@ -6,33 +6,58 @@ import Dashboard from './pages/Dashboard'
 import UserManagement from './pages/UserManagement'
 import Analytics from './pages/Analytics'
 import Settings from './pages/Settings'
+import ModuleManager from './modules/module-manager'
+import { ModuleRoute } from './modules/types'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [moduleRoutes, setModuleRoutes] = useState<ModuleRoute[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth <= 768
-      setIsMobile(mobile)
-      
-      // Auto-close sidebar on mobile
-      if (mobile) {
-        setIsSidebarOpen(false)
-      } else {
-        setIsSidebarOpen(false)  // Keep closed by default
+    const initializeApplication = async () => {
+      try {
+        const moduleManager = ModuleManager.getInstance()
+        
+        // Initialize system modules
+        await moduleManager.initializeSystemModules()
+        
+        // Get enabled modules and their routes
+        const enabledModules = moduleManager.getEnabledModules()
+        console.log('Enabled Modules:', enabledModules)
+
+        const routes = enabledModules.flatMap(module => 
+          module.routes ? module.routes.map(route => ({
+            ...route,
+            moduleName: module.id
+          })) : []
+        )
+
+        console.log('Module Routes:', routes)
+        setModuleRoutes(routes)
+        setIsLoading(false)
+      } catch (error) {
+        console.error('Application initialization failed:', error)
+        setIsLoading(false)
       }
     }
 
-    // Check initial screen size
-    checkMobile()
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768
+      setIsMobile(mobile)
+      setIsSidebarOpen(false)
+    }
 
-    // Add event listener for resize
+    // Initialize application and set up resize listener
+    initializeApplication()
+    checkMobile()
     window.addEventListener('resize', checkMobile)
 
-    // Cleanup listener
-    return () => window.removeEventListener('resize', checkMobile)
+    return () => {
+      window.removeEventListener('resize', checkMobile)
+    }
   }, [])
 
   const toggleSidebar = () => {
@@ -40,13 +65,38 @@ function App() {
   }
 
   const renderPage = () => {
-    switch(currentPage) {
-      case 'dashboard': return <Dashboard />
-      case 'users': return <UserManagement />
-      case 'analytics': return <Analytics />
-      case 'settings': return <Settings />
-      default: return <Dashboard />
+    // Default pages
+    const defaultPages: {[key: string]: React.ComponentType} = {
+      'dashboard': Dashboard,
+      'users': UserManagement,
+      'analytics': Analytics,
+      'settings': Settings
     }
+
+    // Check default pages first
+    if (defaultPages[currentPage]) {
+      return React.createElement(defaultPages[currentPage])
+    }
+
+    // Check module routes
+    const moduleRoute = moduleRoutes.find(route => 
+      route.name.toLowerCase().replace(/\s/g, '') === currentPage
+    )
+
+    console.log('Current Page:', currentPage)
+    console.log('Module Route Found:', moduleRoute)
+
+    return moduleRoute 
+      ? React.createElement(moduleRoute.component)
+      : React.createElement(Dashboard)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-secondary-900">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-primary-500"></div>
+      </div>
+    )
   }
 
   return (
@@ -69,6 +119,7 @@ function App() {
           setCurrentPage={setCurrentPage} 
           isOpen={isSidebarOpen}
           isMobile={isMobile}
+          moduleRoutes={moduleRoutes}
         />
         <div className={`
           flex-1 flex flex-col 

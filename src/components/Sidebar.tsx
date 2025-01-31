@@ -5,21 +5,24 @@ import {
   BarChart3, 
   Settings as SettingsIcon
 } from 'lucide-react'
+import { ModuleRoute } from '../modules/types'
 
 interface SidebarProps {
   currentPage: string
   setCurrentPage: (page: string) => void
   isOpen: boolean
   isMobile: boolean
+  moduleRoutes: ModuleRoute[]
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
   currentPage, 
   setCurrentPage, 
   isOpen,
-  isMobile
+  isMobile,
+  moduleRoutes = []
 }) => {
-  const menuItems = [
+  const defaultMenuItems = [
     { 
       name: 'dashboard', 
       label: 'Dashboard', 
@@ -42,6 +45,17 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   ]
 
+  const moduleMenuItems = moduleRoutes.map(route => ({
+    name: route.name.toLowerCase().replace(/\s/g, ''),
+    label: route.name,
+    icon: route.icon || LayoutDashboard
+  }))
+
+  const menuItems = [
+    ...defaultMenuItems,
+    ...moduleMenuItems
+  ]
+
   return (
     <div 
       className={`
@@ -61,14 +75,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       }}
     >
       <div className="relative h-full flex flex-col">
-        {/* Navigation Menu */}
         <nav className="p-4 flex-1">
           {menuItems.map((item) => (
             <button
               key={item.name}
-              onClick={() => {
-                setCurrentPage(item.name)
-              }}
+              onClick={() => setCurrentPage(item.name)}
               className={`
                 flex items-center w-full p-3 rounded-lg mb-2 
                 transition-colors duration-200

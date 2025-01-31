@@ -1,11 +1,14 @@
+import React from 'react'
+
 export interface ModuleConfig {
   id: string
   name: string
   description: string
   version: string
-  routes?: ModuleRoute[]
+  routes: ModuleRoute[]
   settings?: ModuleSetting[]
   permissions?: ModulePermission[]
+  icon?: React.ElementType
 }
 
 export interface ModuleRoute {
@@ -13,6 +16,7 @@ export interface ModuleRoute {
   component: React.ComponentType
   name: string
   icon?: React.ElementType
+  moduleName: string
 }
 
 export interface ModuleSetting {
@@ -27,4 +31,13 @@ export interface ModulePermission {
   id: string
   name: string
   description: string
+}
+
+export interface ModuleManagerInterface {
+  registerModule(module: ModuleConfig): void
+  enableModule(moduleId: string): void
+  disableModule(moduleId: string): void
+  getEnabledModules(): ModuleConfig[]
+  getAllModules(): ModuleConfig[]
+  initializeSystemModules(): Promise<void>
 }

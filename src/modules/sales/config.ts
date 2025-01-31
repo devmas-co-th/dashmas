@@ -18,19 +18,22 @@ const salesModuleConfig: ModuleConfig = {
       path: '/sales/dashboard',
       component: SalesDashboard,
       name: 'Sales Dashboard',
-      icon: DollarSign
+      icon: DollarSign,
+      moduleName: 'sales'
     },
     {
       path: '/sales/orders',
       component: OrderManagement,
       name: 'Orders',
-      icon: ShoppingCart
+      icon: ShoppingCart,
+      moduleName: 'sales'
     },
     {
       path: '/sales/customers',
       component: CustomerManagement,
       name: 'Customers',
-      icon: Users
+      icon: Users,
+      moduleName: 'sales'
     }
   ],
   settings: [
