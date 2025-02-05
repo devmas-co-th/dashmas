@@ -40,6 +40,13 @@ export async function loadModules(): Promise<ModuleConfig[]> {
 
 export async function initializeModules(moduleManager: any) {
   try {
+    // Explicitly import HRMS module
+    const hrmsModule = await import('./hrms')
+    
+    // Initialize HRMS module
+    hrmsModule.initialize()
+
+    // Load discovered modules
     const discoveredModules = await loadModules()
     
     discoveredModules.forEach(module => {
