@@ -1,27 +1,61 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   LayoutDashboard, 
   Users, 
   BarChart3, 
-  Settings as SettingsIcon
+  Analytics
 } from 'lucide-react'
 import { ModuleRoute } from '../modules/types'
+import ModuleManager from '../modules/module-manager'
 
 interface SidebarProps {
   currentPage: string
   setCurrentPage: (page: string) => void
   isOpen: boolean
   isMobile: boolean
-  moduleRoutes: ModuleRoute[]
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
   currentPage, 
   setCurrentPage, 
   isOpen,
-  isMobile,
-  moduleRoutes = []
+  isMobile
 }) => {
+  const [moduleRoutes, setModuleRoutes] = useState<ModuleRoute[]>([])
+
+  useEffect(() => {
+    const loadModulesFromStorage = () => {
+      try {
+        const moduleManager = ModuleManager.getInstance()
+        const enabledModules = moduleManager.getEnabledModules()
+
+        const routes = enabledModules.flatMap(module => 
+          module.routes ? module.routes.map(route => ({
+            ...route,
+            moduleName: module.id
+          })) : []
+        )
+
+        console.log('Sidebar Module Routes:', routes)
+        setModuleRoutes(routes)
+      } catch (error) {
+        console.error('Error loading modules in Sidebar:', error)
+      }
+    }
+
+    loadModulesFromStorage()
+
+    const handleStorageChange = () => {
+      loadModulesFromStorage()
+    }
+
+    window.addEventListener('moduleStatusChanged', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('moduleStatusChanged', handleStorageChange)
+    }
+  }, [])
+
   const defaultMenuItems = [
     { 
       name: 'dashboard', 
@@ -37,11 +71,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       name: 'analytics', 
       label: 'Analytics', 
       icon: BarChart3 
-    },
-    { 
-      name: 'settings', 
-      label: 'Settings', 
-      icon: SettingsIcon 
     }
   ]
 
@@ -53,6 +82,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const menuItems = [
     ...defaultMenuItems,
+    ...(moduleMenuItems.length > 0 ? [{ type: 'separator' }] : []),
     ...moduleMenuItems
   ]
 
@@ -76,37 +106,52 @@ const Sidebar: React.FC<SidebarProps> = ({
     >
       <div className="relative h-full flex flex-col">
         <nav className="p-4 flex-1">
-          {menuItems.map((item) => (
-            <button
-              key={item.name}
-              onClick={() => setCurrentPage(item.name)}
-              className={`
-                flex items-center w-full p-3 rounded-lg mb-2 
-                transition-colors duration-200
-                ${currentPage === item.name 
-                  ? 'bg-primary-500 text-white' 
-                  : 'text-secondary-600 dark:text-secondary-300 hover:bg-gray-100 dark:hover:bg-secondary-700'}
-                ${isOpen ? 'justify-start' : 'justify-center'}
-              `}
-              title={!isOpen ? item.label : ''}
-            >
-              <item.icon className={`
-                ${isOpen ? 'mr-3' : ''} 
-                ${currentPage === item.name 
-                  ? 'text-white' 
-                  : 'text-secondary-500 dark:text-secondary-400'}
-              `} />
-              {isOpen && (
-                <span className={`
+          {menuItems.map((item, index) => {
+            if (item.type === 'separator') {
+              return (
+                <div 
+                  key={`separator-${index}`} 
+                  className="
+                    my-4 
+                    border-t border-gray-200 
+                    dark:border-secondary-700
+                  "
+                />
+              )
+            }
+
+            return (
+              <button
+                key={item.name}
+                onClick={() => setCurrentPage(item.name)}
+                className={`
+                  flex items-center w-full p-3 rounded-lg mb-2 
+                  transition-colors duration-200
+                  ${currentPage === item.name 
+                    ? 'bg-primary-500 text-white' 
+                    : 'text-secondary-600 dark:text-secondary-300 hover:bg-gray-100 dark:hover:bg-secondary-700'}
+                  ${isOpen ? 'justify-start' : 'justify-center'}
+                `}
+                title={!isOpen ? item.label : ''}
+              >
+                <item.icon className={`
+                  ${isOpen ? 'mr-3' : ''} 
                   ${currentPage === item.name 
                     ? 'text-white' 
-                    : 'text-secondary-700 dark:text-secondary-200'}
-                `}>
-                  {item.label}
-                </span>
-              )}
-            </button>
-          ))}
+                    : 'text-secondary-500 dark:text-secondary-400'}
+                `} />
+                {isOpen && (
+                  <span className={`
+                    ${currentPage === item.name 
+                      ? 'text-white' 
+                      : 'text-secondary-700 dark:text-secondary-200'}
+                  `}>
+                    {item.label}
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </nav>
       </div>
     </div>
