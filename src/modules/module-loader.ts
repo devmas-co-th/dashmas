@@ -2,12 +2,19 @@ import { ModuleConfig } from './types'
 
 export async function loadModules(): Promise<ModuleConfig[]> {
   try {
+    // Use Vite's import.meta.glob to dynamically import module configs
     const moduleContext = import.meta.glob('../modules/*/config.ts')
     
     const modulePromises = Object.entries(moduleContext).map(async ([path, loader]) => {
       try {
         const moduleConfig = await loader()
-        console.log('Loaded Module Config:', moduleConfig.default)
+        
+        // Validate module configuration
+        if (!moduleConfig.default || !moduleConfig.default.id) {
+          console.warn(`Invalid module configuration in ${path}`)
+          return null
+        }
+
         return {
           ...moduleConfig.default,
           path: path
@@ -19,6 +26,8 @@ export async function loadModules(): Promise<ModuleConfig[]> {
     })
 
     const modules = await Promise.all(modulePromises)
+    
+    // Filter out null/invalid modules
     const validModules = modules.filter((module): module is ModuleConfig => module !== null)
     
     console.log('Discovered Modules:', validModules)

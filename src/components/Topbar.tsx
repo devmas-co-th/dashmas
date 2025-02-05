@@ -6,7 +6,8 @@ import {
   Menu,
   Sun,
   Moon,
-  AlignLeft 
+  AlignLeft,
+  Settings  // Added Settings icon
 } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 
@@ -14,14 +15,20 @@ interface TopbarProps {
   toggleSidebar: () => void
   isMobile: boolean
   isOpen: boolean
+  setCurrentPage: (page: string) => void  // Added prop to change current page
 }
 
 const Topbar: React.FC<TopbarProps> = ({ 
   toggleSidebar, 
   isMobile, 
-  isOpen 
+  isOpen,
+  setCurrentPage  // Destructure new prop
 }) => {
   const { isDarkMode, toggleTheme } = useTheme()
+
+  const handleOpenSettings = () => {
+    setCurrentPage('settings')
+  }
 
   return (
     <header className={`
@@ -121,6 +128,27 @@ const Topbar: React.FC<TopbarProps> = ({
 
         {/* Right Section - Actions */}
         <div className="flex items-center space-x-4">
+          {/* Settings Button */}
+          <button 
+            onClick={handleOpenSettings}
+            className="
+              p-2 rounded-full 
+              hover:bg-gray-100 dark:hover:bg-secondary-800
+              transition-colors
+              group
+              flex items-center justify-center
+            "
+            title="Open Settings"
+          >
+            <Settings className="
+              text-secondary-600 
+              group-hover:text-secondary-700
+              dark:text-secondary-400 
+              dark:group-hover:text-secondary-300
+              w-5 h-5
+            " />
+          </button>
+
           {/* Theme Toggle */}
           <button 
             onClick={toggleTheme}

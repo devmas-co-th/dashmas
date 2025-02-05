@@ -21,7 +21,7 @@ function App() {
       try {
         const moduleManager = ModuleManager.getInstance()
         
-        // Initialize system modules
+        // Wait for system modules to be initialized
         await moduleManager.initializeSystemModules()
         
         // Get enabled modules and their routes
@@ -41,6 +41,27 @@ function App() {
       } catch (error) {
         console.error('Application initialization failed:', error)
         setIsLoading(false)
+      }
+
+      // Listen for module status changes
+      const handleModuleStatusChange = () => {
+        const moduleManager = ModuleManager.getInstance()
+        const enabledModules = moduleManager.getEnabledModules()
+
+        const routes = enabledModules.flatMap(module => 
+          module.routes ? module.routes.map(route => ({
+            ...route,
+            moduleName: module.id
+          })) : []
+        )
+
+        setModuleRoutes(routes)
+      }
+
+      window.addEventListener('moduleStatusChanged', handleModuleStatusChange)
+
+      return () => {
+        window.removeEventListener('moduleStatusChanged', handleModuleStatusChange)
       }
     }
 
@@ -119,7 +140,6 @@ function App() {
           setCurrentPage={setCurrentPage} 
           isOpen={isSidebarOpen}
           isMobile={isMobile}
-          moduleRoutes={moduleRoutes}
         />
         <div className={`
           flex-1 flex flex-col 
@@ -136,6 +156,7 @@ function App() {
             toggleSidebar={toggleSidebar} 
             isMobile={isMobile}
             isOpen={isSidebarOpen}
+            setCurrentPage={setCurrentPage}  // Added setCurrentPage prop
           />
           <main 
             className="flex-1 overflow-y-auto p-4 md:p-6"

@@ -7,7 +7,7 @@ class ModuleManager implements ModuleManagerInterface {
   private enabledModules: Map<string, ModuleConfig> = new Map()
 
   private constructor() {
-    this.loadPersistedModules()
+    this.initializeModuleState()
   }
 
   public static getInstance(): ModuleManager {
@@ -17,44 +17,9 @@ class ModuleManager implements ModuleManagerInterface {
     return ModuleManager.instance
   }
 
-  private loadPersistedModules() {
+  private async initializeModuleState() {
     try {
-      // Load all modules first
-      const savedModules = localStorage.getItem('registeredModules')
-      const savedEnabledModules = localStorage.getItem('enabledModules')
-
-      if (savedModules) {
-        const moduleIds = JSON.parse(savedModules)
-        moduleIds.forEach(moduleId => {
-          // Dynamically import and register modules
-          import(`../${moduleId}/config.ts`)
-            .then(moduleConfig => {
-              this.registerModule(moduleConfig.default)
-            })
-            .catch(error => {
-              console.error(`Failed to load module ${moduleId}:`, error)
-            })
-        })
-      }
-
-      // Restore enabled modules
-      if (savedEnabledModules) {
-        const enabledModuleIds = JSON.parse(savedEnabledModules)
-        enabledModuleIds.forEach(moduleId => {
-          const module = this.modules.get(moduleId)
-          if (module) {
-            this.enabledModules.set(moduleId, module)
-          }
-        })
-      }
-    } catch (error) {
-      console.error('Error loading persisted modules:', error)
-    }
-  }
-
-  async initializeSystemModules() {
-    try {
-      // Load all modules from the modules directory
+      // Load all discovered modules first
       const discoveredModules = await loadModules()
       
       // Register all discovered modules
@@ -65,8 +30,37 @@ class ModuleManager implements ModuleManagerInterface {
       // Persist registered module IDs
       const moduleIds = discoveredModules.map(module => module.id)
       localStorage.setItem('registeredModules', JSON.stringify(moduleIds))
+
+      // Restore enabled modules from localStorage
+      this.restoreEnabledModules(discoveredModules)
     } catch (error) {
-      console.error('System module initialization failed:', error)
+      console.error('Module initialization failed:', error)
+    }
+  }
+
+  private restoreEnabledModules(discoveredModules: ModuleConfig[]) {
+    try {
+      // Get previously enabled modules from localStorage
+      const savedEnabledModules = localStorage.getItem('enabledModules')
+
+      if (savedEnabledModules) {
+        const enabledModuleIds = JSON.parse(savedEnabledModules)
+
+        // Find and enable modules that were previously enabled
+        enabledModuleIds.forEach(moduleId => {
+          const moduleToEnable = discoveredModules.find(module => module.id === moduleId)
+          
+          if (moduleToEnable) {
+            // Explicitly enable the module
+            this.enableModule(moduleId, false)
+          }
+        })
+
+        // Dispatch event after initial restoration
+        this.dispatchModuleStatusChangeEvent()
+      }
+    } catch (error) {
+      console.error('Error restoring enabled modules:', error)
     }
   }
 
@@ -78,17 +72,22 @@ class ModuleManager implements ModuleManagerInterface {
     this.modules.set(module.id, module)
   }
 
-  enableModule(moduleId: string): void {
+  enableModule(moduleId: string, shouldDispatchEvent: boolean = true): void {
     const module = this.modules.get(moduleId)
     if (module) {
       this.enabledModules.set(moduleId, module)
       this.saveEnabledModules()
+      
+      if (shouldDispatchEvent) {
+        this.dispatchModuleStatusChangeEvent()
+      }
     }
   }
 
   disableModule(moduleId: string): void {
     this.enabledModules.delete(moduleId)
     this.saveEnabledModules()
+    this.dispatchModuleStatusChangeEvent()
   }
 
   private saveEnabledModules(): void {
@@ -98,6 +97,11 @@ class ModuleManager implements ModuleManagerInterface {
     } catch (error) {
       console.error('Error saving enabled modules:', error)
     }
+  }
+
+  private dispatchModuleStatusChangeEvent(): void {
+    const event = new Event('moduleStatusChanged')
+    window.dispatchEvent(event)
   }
 
   getEnabledModules(): ModuleConfig[] {
@@ -111,6 +115,8 @@ class ModuleManager implements ModuleManagerInterface {
   unregisterModule(moduleId: string): void {
     this.modules.delete(moduleId)
     this.enabledModules.delete(moduleId)
+    this.saveEnabledModules()
+    this.dispatchModuleStatusChangeEvent()
   }
 }
 

@@ -2,7 +2,8 @@ import React from 'react'
 import { 
   DollarSign, 
   ShoppingCart, 
-  TrendingUp 
+  TrendingUp,
+  Users  // Added Users import
 } from 'lucide-react'
 
 const SalesDashboard: React.FC = () => {
