@@ -2,11 +2,17 @@ import { ModuleConfig } from '../types'
 import { 
   ShoppingCart, 
   DollarSign, 
-  Users 
+  Users,
+  List,
+  Grid 
 } from 'lucide-react'
 import SalesDashboard from './pages/SalesDashboard'
 import OrderManagement from './pages/OrderManagement'
 import CustomerManagement from './pages/CustomerManagement'
+
+// Customer List and Grid Views for Tabs
+import CustomerList from './pages/CustomerList'
+import CustomerGrid from './pages/CustomerGrid'
 
 const salesModuleConfig: ModuleConfig = {
   id: 'sales',
@@ -34,6 +40,23 @@ const salesModuleConfig: ModuleConfig = {
       name: 'Customers',
       icon: Users,
       moduleName: 'sales'
+    }
+  ],
+  // New pageTabs configuration
+  pageTabs: [
+    {
+      id: 'customer_list',
+      page: 'CustomerManagement',
+      label: 'List View',
+      component: CustomerList,
+      icon: List
+    },
+    {
+      id: 'customer_grid',
+      page: 'CustomerManagement',
+      label: 'Grid View',
+      component: CustomerGrid,
+      icon: Grid
     }
   ],
   settings: [

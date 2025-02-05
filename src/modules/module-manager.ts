@@ -17,6 +17,12 @@ class ModuleManager implements ModuleManagerInterface {
     return ModuleManager.instance
   }
 
+
+  public async initializeSystemModules() {
+      
+  }
+ 
+
   private async initializeModuleState() {
     try {
       // Load all discovered modules first
