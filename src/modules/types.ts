@@ -1,5 +1,13 @@
-import React from 'react'
+// Add this to the existing types.ts file
+export interface PageTab {
+  id: string
+  page: string
+  label: string
+  component: React.ComponentType
+  icon?: React.ElementType
+}
 
+// Update ModuleConfig interface to include pageTabs
 export interface ModuleConfig {
   id: string
   name: string
@@ -9,35 +17,5 @@ export interface ModuleConfig {
   settings?: ModuleSetting[]
   permissions?: ModulePermission[]
   icon?: React.ElementType
-}
-
-export interface ModuleRoute {
-  path: string
-  component: React.ComponentType
-  name: string
-  icon?: React.ElementType
-  moduleName: string
-}
-
-export interface ModuleSetting {
-  key: string
-  type: 'boolean' | 'string' | 'number' | 'select'
-  label: string
-  defaultValue: any
-  options?: { value: string, label: string }[]
-}
-
-export interface ModulePermission {
-  id: string
-  name: string
-  description: string
-}
-
-export interface ModuleManagerInterface {
-  registerModule(module: ModuleConfig): void
-  enableModule(moduleId: string): void
-  disableModule(moduleId: string): void
-  getEnabledModules(): ModuleConfig[]
-  getAllModules(): ModuleConfig[]
-  initializeSystemModules(): Promise<void>
+  pageTabs?: PageTab[]  // New optional property
 }
